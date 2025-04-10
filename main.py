@@ -25,7 +25,10 @@ import torch.multiprocessing as mp
 
 def main(args):
     device = torch.device(f"cuda:{args.cuda_device}" if torch.cuda.is_available() else "cpu")
-    client_data_splits, eval_dataloader, metric = load_glue_dataset(dataset_name=args.dataset, num_clients=args.num_clients, batch_size=32)
+    if "mnli" in args.dataset:
+        client_data_splits, eval_dataloader, mismatched_eval_dataloader, metric = load_glue_dataset(dataset_name=args.dataset, num_clients=args.num_clients, batch_size=32)
+    else:
+        client_data_splits, eval_dataloader, metric = load_glue_dataset(dataset_name=args.dataset, num_clients=args.num_clients, batch_size=32)
     # client_data = split_non_iid(train_data, args.num_clients)
     peft_config = LoraConfig(use_dora=True, task_type="SEQ_CLS", inference_mode=False, r=4, lora_alpha=16, lora_dropout=0.1)
     base_model = AutoModelForSequenceClassification.from_pretrained(args.model_name, return_dict=True)
@@ -45,6 +48,7 @@ def main(args):
         f.write(f"Number of Epochs per Round: {args.num_epochs}\n\n")
 
         max_acc = 0
+        mismatched_max_acc = 0
         for round_num in range(args.num_rounds):
             print(f"\n--- Federated Learning Round {round_num + 1} ---")
     
@@ -66,6 +70,8 @@ def main(args):
             print("\nAggregating client models on the server...")
             server.aggregate(client_models)
             eval_metric = server.evaluate(eval_dataloader, metric=metric)
+            if "mnli" in args.dataset:
+                mismatched_eval_metric = server.evaluate(mismatched_eval_dataloader, metric=metric)
             print(eval_metric)
             # wandb.log(eval_metric)
             # evaluate(lora_model, val_dataset)
@@ -74,11 +80,21 @@ def main(args):
             if max_acc<eval_metric['accuracy']:
                 max_acc = eval_metric['accuracy']
 
+            if "mnli" in args.dataset and mismatched_max_acc<mismatched_eval_metric["accuracy"]:
+                mismatched_max_acc=mismatched_eval_metric["accuracy"]
+
             for client in clients:
                 client.set_parameters(server.global_model.state_dict())
 
-            f.write(f"  Global Accuracy after Round {round_num + 1}: {eval_metric['accuracy']:.4f}%\n\n")
-        f.write(f"  Global Accuracy final: {eval_metric['accuracy']:.4f} and max_acc: {max_acc:.4f}%\n\n")
+            if "mnli" in args.dataset:
+                f.write(f"  Global Accuracy after Round {round_num + 1}: {eval_metric['accuracy']:.4f}, {mismatched_eval_metric['accuracy']:.4f}%\n\n")
+            else:
+                f.write(f"  Global Accuracy after Round {round_num + 1}: {eval_metric['accuracy']:.4f}%\n\n")
+        if "mnli" in args.dataset:
+            f.write(f"  Global Accuracy matched final: {eval_metric['accuracy']:.4f} and max_acc: {max_acc:.4f}%\n\n")
+            f.write(f"  Global Accuracy mismatched final: {mismatched_eval_metric['accuracy']:.4f} and max_acc: {mismatched_max_acc:.4f}%\n\n")
+        else:
+            f.write(f"  Global Accuracy final: {eval_metric['accuracy']:.4f} and max_acc: {max_acc:.4f}%\n\n")
     print(f"Completed {args.method} on {args.dataset} with {args.model_name}. Final Accuracy: {eval_metric['accuracy']:.4f}%")
     # wandb.finish()
 
