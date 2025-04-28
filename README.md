@@ -18,7 +18,7 @@ original repo: https://github.com/lavanquan/fedora_project
 - More logical flow in training and evaluation procedures
 ### Memory Optimization Features
 - Gradient Accumulation
-- ~~Mixed Precision Training~~ 
+- ~~Mixed Precision Training~~ --> FP16 is kept in the code, but it is configurable.
 ## Note:
 - for running experiment in Lab server, it is good to use parallelly_run.sh
 - for cloud environment, it is good to use singly_run.sh
