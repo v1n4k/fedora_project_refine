@@ -11,7 +11,7 @@ For original repo: https://github.com/lavanquan/fedora_project
 ### More filexible and configurable bash script
 - Powerful bash script enable two mode to run
 - Single mode: without queue function
-- **Queue mode:**P you can now queue the experiment by just using one line command to arrange more experiment
+- **Queue mode**: you can now queue the experiment by just using one line command to arrange more experiment
 - By using Queue mode you can achieve semi-auto experiment running
 - e.g. for running all method combination in one dataset with 4 GPUs
   - ./run_experiments.sh --queue --gpus "0,1,2,3" --methods "fedora,kd,base,...." --dataset sst2
