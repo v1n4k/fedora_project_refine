@@ -10,13 +10,13 @@
 #
 # USAGE MODES:
 # 1. Single experiment on specific GPU:
-#    ./run_experiments.sh --gpu 0 --method fedora --dataset sst2
+#    ./run_experiment.sh --gpu 0 --method fedora --dataset sst2
 #
 # 2. Queue experiments across multiple GPUs (distributed):
-#    ./run_experiments.sh --queue --gpus "0,1,2,3" --methods "fedora,kd,base" --datasets "sst2,qqp"
+#    ./run_experiment.sh --queue --gpus "0,1,2,3" --methods "fedora,kd,base" --datasets "sst2,qqp"
 #
 # 3. Queue experiments on a single GPU:
-#    ./run_experiments.sh --queue --gpu 2 --methods "fedora,kd,base" --datasets "sst2,qqp"
+#    ./run_experiment.sh --queue --gpu 2 --methods "fedora,kd,base" --datasets "sst2,qqp"
 # All methods
 # --methods "base","fedora","ns","ns_manifold","kd","muon","fedora+kd","fedora+muon","fedora+kd+muon","kd+muon","muon+ns","muon+ns_manifold"
 
@@ -47,14 +47,14 @@ print_warning() {
 
 # ---- DEFAULT CONFIGURATION PARAMETERS ----
 NUM_EPOCHS=2
-NUM_ROUNDS=2
+NUM_ROUNDS=10
 RANK=4
 LR=3e-4
 OUTPUT_DIR="results"
 MODEL_NAME="roberta-base"
 
 # ---- MEMORY OPTIMIZATION PARAMETERS ----
-BATCH_SIZE=64                   # Reduces memory usage (original default: 32)
+BATCH_SIZE=128                   # Reduces memory usage (original default: 32)
 GRADIENT_ACCUMULATION_STEPS=1   # Accumulates gradients over multiple steps
 USE_FP16=""                     # Mixed precision disabled by default
 
